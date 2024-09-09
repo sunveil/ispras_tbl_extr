@@ -17,6 +17,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
+import utils.Config;
 import writers.HtmlTableWriter;
 import writers.JsonDocumentWriter;
 import javax.xml.parsers.ParserConfigurationException;
@@ -49,6 +50,9 @@ public class DedocTableExtractor {
 
     @Option(name = "-d", aliases = {"--debug"}, usage = "allow debug output")
     private boolean debug = false;
+
+    @Option(name = "-rf", aliases = {"--remove"}, usage = "remove frame")
+    private boolean removeFrame = false;
     @Option(name = "-?", aliases = {"--help"}, usage = "show this message")
     private boolean help = false;
 
@@ -69,6 +73,9 @@ public class DedocTableExtractor {
             }
 
             throwIfEmpty(inArg);
+            if (removeFrame) {
+                Config.removeFrame = true;
+            }
             inputFile = new File(inArg);
             inputPath = inputFile.isFile() ? inputFile.getParentFile().toPath() : inputFile.toPath();
 
@@ -117,6 +124,7 @@ public class DedocTableExtractor {
 
         Document document = null;
         document = Document.load(path, startPage, endPage);
+
         int lastPageIndex = document.getPageCnt();
         if (startPage > lastPageIndex)
             return;

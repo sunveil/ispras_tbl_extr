@@ -166,6 +166,11 @@ public class TextChunk extends PDFRectangle {
         textPositions.addAll(tp);
     }
 
+    public void addTextPosition(TextPosition tp) {
+        textPositions.add(tp);
+    }
+
+
     public Iterator<TextPosition> getTextPositions() {
         return textPositions.iterator();
     }

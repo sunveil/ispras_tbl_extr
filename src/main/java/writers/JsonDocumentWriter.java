@@ -143,7 +143,7 @@ public class JsonDocumentWriter {
                                 cellBlock.put("width", (int)tl.getBbox().getWidth());
                                 cellBlock.put("height", (int)tl.getBbox().getHeight());
                                 cellBlock.put("start", start);
-                                int len = tb.getText().length();
+                                int len = tl.getText().length();
                                 cellBlock.put("end", start + len);
                                 start = start + len + 1;
                                 cellBlocks.put(cellBlock);

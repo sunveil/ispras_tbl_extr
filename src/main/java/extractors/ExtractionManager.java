@@ -6,7 +6,10 @@ import model.Page;
 import model.table.Table;
 import model.table.TableType;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.pdfbox.text.PDFTextStripper;
 
+import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 import java.util.*;
 
 public final class ExtractionManager {
@@ -18,13 +21,15 @@ public final class ExtractionManager {
         this.document = document;
     }
 
-    public List<Table> extract() {
+    public List<Table> extract() throws IOException {
         List<Table> result = new ArrayList<>();
 
         String docFileName = document.getSourceFile().getName();
 
         for(Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext();) {
             Page page = pages.next();
+            List<Rectangle2D> frames = page.getFrames();
+            System.out.println(frames);
             BorderedTableExtractor bte = new BorderedTableExtractor(page);
             List<Table> borderedTables = bte.extract();
             int ordinal = 1;
@@ -32,7 +37,7 @@ public final class ExtractionManager {
             // Code tables
             if (null != borderedTables) {
                 codeTables(borderedTables, docFileName, ordinal, page.getIndex(), "BR");
-                codeBorderedTRables(borderedTables, docFileName, ordinal, page.getIndex());
+                codeBorderedTables(borderedTables, docFileName, ordinal, page.getIndex());
                 result.addAll(borderedTables);
             }
 
@@ -55,7 +60,7 @@ public final class ExtractionManager {
             // Code tables
             if (null != borderedTables) {
                 codeTables(borderedTables, docFileName, ordinal, page.getIndex(), "BR");
-                codeBorderedTRables(borderedTables, docFileName, ordinal, page.getIndex());
+                codeBorderedTables(borderedTables, docFileName, ordinal, page.getIndex());
                 result.addAll(borderedTables);
             }
 
@@ -64,7 +69,7 @@ public final class ExtractionManager {
         return result.isEmpty() ? null : result;
     }
 
-    private void codeBorderedTRables(List<Table> tables, String fileName, int section, int pageIndex) {
+    private void codeBorderedTables(List<Table> tables, String fileName, int section, int pageIndex) {
         if (null == tables || tables.isEmpty())
             return;
 

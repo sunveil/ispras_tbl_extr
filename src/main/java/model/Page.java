@@ -3,7 +3,10 @@ package model;
 import model.table.Cell;
 import model.table.Table;
 import org.apache.pdfbox.pdmodel.PDPage;
+
+import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.util.*;
 import java.util.List;
 
@@ -28,11 +31,15 @@ public class Page extends PDFRectangle {
     private final java.util.List<Ruling> verticalRulings;   // Vertical normalized rulings
     private final java.util.List<Ruling> horizontalRulings; // Horizontal normalized rulings
     private final java.util.List<Ruling> visibleRulings;
+    private final java.util.List<Ruling> joinedRulings;
+
     private final java.util.List<PDFRectangle> possibleTables;
     private java.util.List<Table> tables;
     private final List<PDFRectangle> cells;
     private final List<Tag> tags;
     private final List<PDFImage> images;
+
+    private final List<Rectangle2D> frames;
 
     // Initialization
     {
@@ -47,10 +54,11 @@ public class Page extends PDFRectangle {
         verticalRulings   = new ArrayList<>();
         horizontalRulings = new ArrayList<>();
         visibleRulings    = new ArrayList<>();
+        joinedRulings     = new ArrayList<>();
         cells             = new ArrayList<>();
         possibleTables    = new ArrayList<>();
         tables            = new ArrayList<>();
-
+        frames            = new ArrayList<>();
         images            = new ArrayList<>();
     }
 
@@ -80,6 +88,24 @@ public class Page extends PDFRectangle {
             orientation = Orientation.NEITHER;
 
     }
+
+    public void addVerticalRulings(List<Ruling> rulings) {
+        verticalRulings.addAll(rulings);
+    }
+
+
+    public void addHorizontalRulings(List<Ruling> rulings) {
+        horizontalRulings.addAll(rulings);
+    }
+
+    public List<Ruling> getVerticalRulings(){
+        return this.verticalRulings;
+    }
+
+    public List<Ruling> getHorizontalRulings(){
+        return this.horizontalRulings;
+    }
+
     public void addTag(Tag tag){
         tags.add(tag);
     }
@@ -90,6 +116,14 @@ public class Page extends PDFRectangle {
 
     public void addImages(List<PDFImage> images){
         this.images.addAll(images);
+    }
+
+    public void addFrames(List<Rectangle2D> frames) {
+        this.frames.addAll(frames);
+    }
+
+    public List<Rectangle2D> getFrames(){
+        return this.frames;
     }
 
     public List<PDFImage> getImages(){
@@ -135,6 +169,8 @@ public class Page extends PDFRectangle {
     public boolean addRulings(List<Ruling> rulings) {
         return this.rulings.addAll(rulings);
     }
+
+
 
     public PDPage getPDPage() {
         return document.getPDPage(index);
@@ -190,8 +226,16 @@ public class Page extends PDFRectangle {
         return visibleRulings.iterator();
     }
 
+    public List<Ruling> getListVisibleRulings() {
+        return visibleRulings;
+    }
+
     public Iterator<Ruling> getRulings() {
         return rulings.iterator();
+    }
+
+    public List<Ruling> getListRulings() {
+        return rulings;
     }
 
     public List<Table> getTables(){
@@ -200,7 +244,13 @@ public class Page extends PDFRectangle {
     }
 
     public void addJoinedRulings(ArrayList<Ruling> joinedHorizontalRulings) {
+        joinedRulings.addAll(joinedHorizontalRulings);
     }
+
+    public ArrayList<Ruling> getJoinedRulings() {
+        return (ArrayList<Ruling>) this.joinedRulings;
+    }
+
 
     public void addCell(PDFRectangle cell) {
 /*        boolean intersected = false;
@@ -214,12 +264,22 @@ public class Page extends PDFRectangle {
             cells.add(cell);
     }
 
+    public void addCells(List<PDFRectangle> cells){
+        cells.addAll(cells);
+    }
+
     private void mergeCells(Cell c1, Cell c2){
     }
 
-    public Iterator<PDFRectangle> getCells(){
-        return cells.iterator();
+    //public Iterator<PDFRectangle> getCells(){
+    //    return cells.iterator();
+    //}
+
+    public List<PDFRectangle> getCells(){
+        return cells;
     }
+
+
 
     public void addPossibleTableArea (PDFRectangle tableArea) {
         possibleTables.add(tableArea);

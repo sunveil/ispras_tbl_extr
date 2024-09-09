@@ -2,14 +2,18 @@ package pdreaders;
 
 import java.awt.*;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.*;
 import java.util.*;
 import java.util.List;
 
 import model.*;
+import org.apache.pdfbox.contentstream.PDFStreamEngine;
 import org.apache.pdfbox.contentstream.operator.color.*;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDResources;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
@@ -17,6 +21,7 @@ import org.apache.pdfbox.pdmodel.graphics.state.RenderingMode;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.commons.lang3.StringUtils;
+import utils.Config;
 
 public class PDContentExtractor extends PDFTextStripper {
 
@@ -27,6 +32,8 @@ public class PDContentExtractor extends PDFTextStripper {
     private final List<TextChunk> tmpWords;
     private final List<TextChunk> lines;  // Text lines composed from characters
     private final List<Ruling> rulings;   // Ruling lines from the PDF document
+
+    private final List<Rectangle2D> frames;
 
     private int order; // An index of an original chunk in its PDF document
     private final char[] whitespaces;
@@ -40,6 +47,8 @@ public class PDContentExtractor extends PDFTextStripper {
     private float maxRight = Float.MIN_VALUE;
 
     private Page currentPage;
+
+    PdfBoxFinder boxFinder = null;
 
     // Settings
     {
@@ -68,6 +77,7 @@ public class PDContentExtractor extends PDFTextStripper {
         tmpWords = new ArrayList<>(100);
         lines = new ArrayList<>(500);
         rulings = new ArrayList<>(200);
+        frames = new ArrayList<>(5000);
 
         whitespaces = new char[]{
                 '\u0020', //  space
@@ -126,11 +136,15 @@ public class PDContentExtractor extends PDFTextStripper {
             final int pageIndex = page.getIndex();
             try {
                 stripPage(pageIndex);
+                boxFinder = new PdfBoxFinder(page.getPDPage());
+                boxFinder.processPage(page.getPDPage());
+                frames.addAll(boxFinder.getBoxes().values());
                 page.addChunks(chunks);
                 //page.addChars(chars);
                 page.addWords(words);
                 page.addLines(lines);
                 page.addRulings(rulings);
+                page.addFrames(frames);
             }
             catch (IOException e) {
                 e.printStackTrace();
@@ -166,6 +180,15 @@ public class PDContentExtractor extends PDFTextStripper {
             rulings.addAll(r);
         }
 
+        if (Config.removeFrame) {
+            PDRectangle rec = new PDRectangle();
+            rec.setLowerLeftX(page.getBBox().getLowerLeftX() + 60);
+            rec.setLowerLeftY(page.getBBox().getLowerLeftY() + 60);
+            rec.setUpperRightX(page.getBBox().getUpperRightX() - 60);
+            rec.setUpperRightY(page.getBBox().getUpperRightY() - 60);
+            page.setMediaBox(rec);
+            page.setCropBox(rec);
+        }
         order = -1; // Each page has own order that starts with 0
         pageIndex += 1; // PDFBox page numbers are 1-based
         setStartPage(pageIndex);
@@ -353,7 +376,7 @@ public class PDContentExtractor extends PDFTextStripper {
 
         PDFFont wordFont = null;
         Color color = null;
-
+        List<TextPosition> tpList = new ArrayList<>();
         for (TextPosition tp: textPositions) {
             String text = tp.getUnicode();
             //ToDO: Fix it. Embedded fonts
@@ -374,7 +397,6 @@ public class PDContentExtractor extends PDFTextStripper {
                 //System.err.println("WARNING: a text whose font is null was ignored");
                 continue;
             }
-
             // Text position coordinates
             final float left   = tp.getXDirAdj();
             final float top    = tp.getYDirAdj() - tp.getHeightDir();
@@ -387,6 +409,7 @@ public class PDContentExtractor extends PDFTextStripper {
                 if (Math.abs(wordRight - left) < tp.getWidthOfSpace() / 2.5) {
                     sb.append(text);
                     wordRight = right;
+                    tpList.add(tp);
 
                     if (Float.compare(wordTop, top) > 0)
                         wordTop = top;
@@ -404,22 +427,34 @@ public class PDContentExtractor extends PDFTextStripper {
                     String wordText = sb.toString();
 
                     TextChunk word = new TextChunk(wordLeft, wordTop, wordRight, wordBottom, wordText, currentPage);
+                    word.updateTextLine();
                     spaceWidth = tp.getWidthOfSpace();
-                    wordFont = getFont(tp);
+                    int size = tpList.size();
+                    int num = 0;
+                    if (size > 2) {
+                        num = 2;
+                    }
+                    if (tpList != null && tpList.size() > 0) {
+                        wordFont = getFont(tpList.get(num));
+                    }
+
                     color = getColor(tp);
                     word.setFont(wordFont);
-                    word.updateTextLine();
                     word.setColor(color);
                     word.setSpaceWidth(spaceWidth);
                     word.setStartOrder(order);
                     word.setEndOrder(order);
                     word.setId(order);
+                    word.addAllTextPositions(tpList);
+
+                    tpList = new ArrayList<>();
                     words.add(word);
                     tmpWords.add(word);
 
                     // A new word starts here
                     sb.setLength(0);
                     sb.append(text);
+                    tpList.add(tp);
                     wordLeft = left;
                     wordTop = top;
                     wordRight = right;
@@ -453,6 +488,8 @@ public class PDContentExtractor extends PDFTextStripper {
             word.setSpaceWidth(spaceWidth);
             word.setStartOrder(order);
             word.setEndOrder(order);
+            word.addAllTextPositions(tpList);
+            tpList = new ArrayList<>();
             words.add(word);
             word.setId(order);
             tmpWords.add(word);

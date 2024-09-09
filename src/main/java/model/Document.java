@@ -27,6 +27,7 @@ import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
 import org.apache.pdfbox.pdmodel.common.filespecification.PDFileSpecification;
 import pdreaders.ImageExtractor;
 import pdreaders.PDContentExtractor;
+import pdreaders.PdfBoxFinder;
 import pdreaders.VisibleRulingExtractor;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -49,7 +50,6 @@ public class Document implements Closeable {
     private final List<Page> pages = new ArrayList<>();
     private final PDContentExtractor contentExtractor;
     private final VisibleRulingExtractor visibleRulingExtractor;
-
     private final ImageExtractor imageExtractor;
     private int index = 0;
     private int pageCnt = 0;
@@ -140,6 +140,7 @@ public class Document implements Closeable {
             */
             contentExtractor.process(page);
             imageExtractor.process(page);
+            //boxFinder.processPage(page.getPDPage());
             // Move to extractLines method
             //visibleRulingExtractor.process(page);
             return page;

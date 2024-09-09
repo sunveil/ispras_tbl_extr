@@ -6,54 +6,21 @@ import model.*;
 import model.table.Cell;
 import model.table.Table;
 import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.contentstream.PDFStreamEngine;
-import org.apache.pdfbox.multipdf.LayerUtility;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.pdmodel.font.*;
-import org.apache.pdfbox.pdmodel.font.encoding.Encoding;
-import org.apache.pdfbox.pdmodel.font.encoding.WinAnsiEncoding;
-import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
-import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.LosslessFactory;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
-import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.apache.pdfbox.pdmodel.graphics.image.PDInlineImage;
-import org.apache.pdfbox.pdmodel.graphics.optionalcontent.PDOptionalContentGroup;
-import org.apache.pdfbox.pdmodel.interactive.digitalsignature.visible.PDFTemplateStructure;
-import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.pdfbox.text.PDFTextStripperByArea;
-import org.apache.pdfbox.text.TextPosition;
-
-import java.awt.Color;
-import java.awt.geom.AffineTransform;
+import java.awt.*;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
-
 import org.apache.commons.io.FilenameUtils;
-import org.apache.pdfbox.tools.imageio.ImageIOUtil;
-import org.w3c.dom.Element;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 public class DebugDrawer {
     private static final String SUFFIX_START_CHAR = "_";
@@ -286,17 +253,15 @@ public class DebugDrawer {
     private void drawRulings() throws IOException {
 
         PDDocument pdDocument = getPDDocument();
-        DrawStyle ds1 = new DrawStyle.Builder().setStrokingColor(GREEN).setLineWidth(3f).createDrawStyle();
-        PageDrawer.Builder builder1 = new PageDrawer.Builder(pdDocument, ds1);
+        DrawStyle ds4 = new DrawStyle.Builder().setStrokingColor(Color.ORANGE).setLineWidth(3f).createDrawStyle();
+        PageDrawer.Builder builder4 = new PageDrawer.Builder(pdDocument, ds4);
 
         for (Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext(); ) {
             Page page = pages.next();
             int pageIndex = page.getIndex();
-
-            PageDrawer drawer = builder1.createPageDrawer(pageIndex);
-            for (Iterator<Ruling> it = page.getBorderedTableRulings(); it.hasNext(); ) {
-                Ruling line = it.next();
-                drawRuling(drawer, line);
+            PageDrawer drawer = builder4.createPageDrawer(pageIndex);
+            for (Ruling r: page.getListRulings()) {
+                drawRuling(drawer, r);
             }
             drawer.close();
         }
@@ -307,11 +272,11 @@ public class DebugDrawer {
     }
 
     private void drawRuling(PageDrawer drawer, Ruling ruling) throws IOException {
-        float x1 = ruling.getStartPoint().x;
-        float y1 = ruling.getStartPoint().y;
-        float x2 = ruling.getEndPoint().x;
-        float y2 = ruling.getEndPoint().y;
-        drawer.drawLine(10, 10, 100, 100);
+        float x1 = ruling.x1;
+        float y1 = ruling.y1;
+        float x2 = ruling.x2;
+        float y2 = ruling.y2;
+        drawer.drawRectangle(x1, y1, x2, y2);
     }
 
    /* private void drawSections() throws IOException {
@@ -351,7 +316,7 @@ public class DebugDrawer {
         DrawStyle ds1 = new DrawStyle.Builder().setStrokingColor(GREEN).setLineWidth(3f).createDrawStyle();
         PageDrawer.Builder builder1 = new PageDrawer.Builder(pdDocument, ds1);
 
-        DrawStyle ds2 = new DrawStyle.Builder().setLineWidth(1f).setStrokingColor(BLUE).createDrawStyle();
+        DrawStyle ds2 = new DrawStyle.Builder().setLineWidth(3f).setStrokingColor(BLUE).createDrawStyle();
         PageDrawer.Builder builder2 = new PageDrawer.Builder(pdDocument, ds2);
 
         DrawStyle ds3 = new DrawStyle.Builder().setStrokingColor(RED).setLineWidth(1f).createDrawStyle();
@@ -385,6 +350,28 @@ public class DebugDrawer {
                 drawer3.drawRectangle(lt - 2, tp - 2, rt + 2, bm + 2);
             }
 
+            drawer3.close();
+
+            drawer3 = builder2.createPageDrawer(page.getIndex());
+            List<Ruling> rectangleList = page.getJoinedRulings();
+            RectangleComparator comp = new RectangleComparator();
+            for (Ruling r: rectangleList) {
+                drawer3.drawLine(r.x1, r.y1, r.x2, r.y2);
+            }
+
+/*            for (Rectangle2D rec: page.getFrames()){
+                drawer3.drawRectangle(rec.getX(), rec.getY(), rec.getX() - rec.getWidth(), rec.getY() - rec.getHeight());
+            }*/
+
+            //Collections.sort(rectangleList, comp);
+  /*          if (rectangleList.size() > 0) {
+                PDFRectangle rec = rectangleList.get(0);
+                lt = rec.getX();
+                tp = rec.getY();
+                rt = rec.getX() + rec.getWidth();
+                bm = rec.getY() + rec.getHeight();
+                drawer3.drawRectangle(lt, tp, rt, bm);
+            }*/
             drawer3.close();
         }
 

@@ -7,6 +7,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +18,14 @@ public class RulingExtractor extends PDFGraphicsStreamEngine {
 
     private List<Ruling> rulings;
     private List<Ruling> tmpRulings;
+    private List<Rectangle2D> rectangles;
     private Point2D.Float currentPoint;
     private Point2D.Float lastMoveToPoint;
 
     {
         rulings = new ArrayList<>();
         tmpRulings = new ArrayList<>();
+        rectangles = new ArrayList<>();
         currentPoint = new Point2D.Float(0f, 0f);
         lastMoveToPoint = new Point2D.Float(0f, 0f);
     }
@@ -60,6 +63,7 @@ public class RulingExtractor extends PDFGraphicsStreamEngine {
         tmpRulings.add(new Ruling(p1x, p1y, p2x, p2y));
         tmpRulings.add(new Ruling(p2x, p2y, p3x, p3y));
         tmpRulings.add(new Ruling(p3x, p3y, p0x, p0y));
+        rectangles.add(new Rectangle2D.Float(p0x, p0y, p1x, p1y));
     }
 
     @Override

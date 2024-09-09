@@ -109,9 +109,11 @@ public final class BorderedTableExtractor extends AbstractTableExtractor {
                 (ArrayList<Ruling>) joinRulings(verticalRulings, Ruling.DISTANCE_TOLERANCE);
         page.addJoinedRulings(joinedHorizontalRulings);
         page.addJoinedRulings(joinedVerticalRulings);
+        page.addVerticalRulings(verticalRulings);
+        page.addHorizontalRulings(horizontalRulings);
         findIntersections(joinedHorizontalRulings, joinedVerticalRulings);
         ArrayList<PDFRectangle> cells = (ArrayList<PDFRectangle>) findCells();
-
+        page.addCells(cells);
         for (PDFRectangle cell: cells) {
             if (cell.getWidth() > Cell.MIN_CELL_WIDTH && cell.getHeight() > Cell.MIN_CELL_HEIGHT) {
                 page.addCell(cell);
