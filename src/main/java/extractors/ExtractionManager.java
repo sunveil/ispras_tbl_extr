@@ -28,8 +28,8 @@ public final class ExtractionManager {
 
         for(Iterator<Page> pages = document.getPagesItrerator(); pages.hasNext();) {
             Page page = pages.next();
-            List<Rectangle2D> frames = page.getFrames();
-            System.out.println(frames);
+            //List<Rectangle2D> frames = page.getFrames();
+            //System.out.println(frames);
             BorderedTableExtractor bte = new BorderedTableExtractor(page);
             List<Table> borderedTables = bte.extract();
             int ordinal = 1;

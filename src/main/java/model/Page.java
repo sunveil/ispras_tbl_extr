@@ -38,7 +38,6 @@ public class Page extends PDFRectangle {
     private final List<PDFRectangle> cells;
     private final List<Tag> tags;
     private final List<PDFImage> images;
-
     private final List<Rectangle2D> frames;
 
     // Initialization

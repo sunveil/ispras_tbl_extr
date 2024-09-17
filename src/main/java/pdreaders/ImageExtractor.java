@@ -24,6 +24,7 @@ import org.apache.pdfbox.contentstream.operator.state.Restore;
 import org.apache.pdfbox.contentstream.operator.state.Save;
 import org.apache.pdfbox.contentstream.operator.state.SetGraphicsStateParameters;
 import org.apache.pdfbox.contentstream.operator.state.SetMatrix;
+import utils.Config;
 
 public class ImageExtractor extends PDFStreamEngine {
 
@@ -76,7 +77,7 @@ public class ImageExtractor extends PDFStreamEngine {
                 Matrix ctmNew = getGraphicsState().getCurrentTransformationMatrix();
                 Rectangle2D.Float bbox = new Rectangle2D.Float(ctmNew.getTranslateX(), ctmNew.getTranslateY(),
                         imageWidth, imageHeight);
-                PDFImage pdfImage = new PDFImage(image, bbox, currentPage, this.sourceFile.getParent());
+                PDFImage pdfImage = new PDFImage(image, bbox, currentPage, Config.tmpDir);
                 this.images.add(pdfImage);
                 pdfImage.save();
             }

@@ -1,61 +1,80 @@
 package writers;
+
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import model.*;
 import model.table.Cell;
 import model.table.Row;
 import model.table.Table;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.apache.commons.io.FilenameUtils;
+import utils.Config;
 
+import javax.imageio.ImageIO;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 
-public class JsonDocumentWriter {
+public class JaksonWriter {
 
     private final Document document;
-    JSONObject json;
+    ObjectMapper jakson;
+    ObjectNode root;
     int startPage = 0;
     int endPage = 0;
     boolean partialExtraction;
+    ObjectWriter writer;;
 
-    public JsonDocumentWriter(Document document){
+    public JaksonWriter(Document document){
         this.document = document;
-        this.json = new JSONObject();
-        this.json.put("document", this.document.getSourceFile().getName());
         this.partialExtraction = false;
+        this.jakson = new ObjectMapper();
+        this.root = this.jakson.createObjectNode();
+        this.root.put("document", this.document.getSourceFile().getName());
+        this.writer = this.jakson.writer(new DefaultPrettyPrinter());
     }
 
-    public JsonDocumentWriter(Document document, int startPage, int endPage){
+    public JaksonWriter(Document document, int startPage, int endPage){
         this.document = document;
-        this.json = new JSONObject();
-        this.json.put("document", this.document.getSourceFile().getName());
         this.startPage = startPage;
         this.endPage = endPage;
         this.partialExtraction = true;
+        this.jakson = new ObjectMapper();
+        this.root = this.jakson.createObjectNode();
+        this.root.put("document", this.document.getSourceFile().getName());
+        this.writer = this.jakson.writer(new DefaultPrettyPrinter());
     }
 
-    public JSONObject write() {
-        JSONArray jsonPages = new JSONArray();
+    public void write() throws IOException {
+        ArrayNode jsonPages = this.jakson.createArrayNode();
         if (partialExtraction) {
             for (int i = startPage; i <= endPage; i++) {
                 Page page = document.getPage(i);
-                jsonPages.put(writePage(page));
+                jsonPages.add(writeJaksonPage(page));
             }
         } else {
             for (Iterator<Page> it = this.document.getPagesItrerator(); it.hasNext(); ) {
                 Page page = it.next();
-                jsonPages.put(writePage(page));
+                jsonPages.add(writeJaksonPage(page));
             }
         }
-        json.put("pages", jsonPages);
-        return json;
+        this.root.put("pages", jsonPages);
+        File out = new File(Config.tmpDir + "data.json");
+        this.writer.writeValue(out, this.root);
     }
 
-    private JSONObject writePage(Page page) {
+    private ObjectNode writeJaksonPage(Page page) {
         //page.sortLines();
-        JSONObject jsonPage = new JSONObject();
-        JSONArray jsonBlocks = new JSONArray();
-        JSONArray jsonTables = new JSONArray();
-        JSONArray jsonImages = new JSONArray();
+        ObjectNode jsonPage = this.jakson.createObjectNode();
+        ArrayNode jsonBlocks = this.jakson.createArrayNode();
+        ArrayNode jsonTables = this.jakson.createArrayNode();
+        ArrayNode jsonImages = this.jakson.createArrayNode();
         jsonPage.put("number", page.getIndex());
         jsonPage.put("width", page.getWidth());
         jsonPage.put("height", page.getHeight());
@@ -65,8 +84,8 @@ public class JsonDocumentWriter {
         }
         List<TextChunk> outsideTextLine = page.getOutsideTextLines();
         for (TextChunk block: outsideTextLine) {
-            JSONObject jsonBlock = new JSONObject();
-            JSONArray jsonAnnotations = new JSONArray();
+            ObjectNode jsonBlock =this.jakson.createObjectNode();
+            ArrayNode jsonAnnotations = this.jakson.createArrayNode();
             jsonBlock.put("order", 10000 * (page.getIndex()+1) + block.getId());
             jsonBlock.put("x_top_left", (int)block.getLeft());
             jsonBlock.put("y_top_left", (int)block.getTop());
@@ -88,7 +107,7 @@ public class JsonDocumentWriter {
             prev_line = block;
             int start = 0;
             for (TextChunk.TextLine chunk: block.getWords()){
-                JSONObject annotation = new JSONObject();
+                ObjectNode annotation = this.jakson.createObjectNode();
                 if (!chunk.getMetadata().equals("")) {
                     annotation.put("metadata", chunk.getMetadata());
                 } else {
@@ -109,34 +128,34 @@ public class JsonDocumentWriter {
                 int len = chunk.getText().length();
                 annotation.put("end", start + len);
                 start = start + len + 1;
-                jsonAnnotations.put(annotation);
+                jsonAnnotations.add(annotation);
             }
             jsonBlock.put("annotations", jsonAnnotations);
-            jsonBlocks.put(jsonBlock);
+            jsonBlocks.add(jsonBlock);
         }
         jsonPage.put("blocks",jsonBlocks);
         for (Table table: page.getTables()) {
-            JSONObject jsonTable = new JSONObject();
+            ObjectNode jsonTable = this.jakson.createObjectNode();
             jsonTable.put("x_top_left", (int)table.getLeft());
             jsonTable.put("y_top_left", (int)table.getTop());
             jsonTable.put("width", (int)table.getWidth());
             jsonTable.put("height", (int)table.getHeight());
             jsonTable.put("order", 10000 * (page.getIndex()+1) + table.getOrder());
-            JSONArray cellProperties = new JSONArray();
-            JSONArray jsonRows = new JSONArray();
+            ArrayNode cellProperties = this.jakson.createArrayNode();
+            ArrayNode jsonRows = this.jakson.createArrayNode();
             for (int i = 0; i < table.getNumOfRows(); i++) {
-                JSONArray jsonRow = new JSONArray();
-                JSONArray jsonPropertiesRow = new JSONArray();
+                ArrayNode jsonRow = this.jakson.createArrayNode();
+                ArrayNode jsonPropertiesRow = this.jakson.createArrayNode();
                 Row row = table.getRow(i);
                 for (Cell cell: row.getCells()){
-                    JSONObject cellText = new JSONObject();
+                    ObjectNode cellText = this.jakson.createObjectNode();
                     cellText.put("text", cell.getText());
-                    JSONArray cellBlocks = new JSONArray();
+                    ArrayNode cellBlocks = this.jakson.createArrayNode();
                     int start = 0;
                     for(TextChunk tb: page.getTextLines()) {
                         for (TextChunk.TextLine tl: tb.getWords()){
                             if (cell.intersects(tl.getBbox())){
-                                JSONObject cellBlock = new JSONObject();
+                                ObjectNode cellBlock = this.jakson.createObjectNode();
                                 cellBlock.put("x_top_left", (int)tl.getBbox().getLeft());
                                 cellBlock.put("y_top_left", (int)tl.getBbox().getTop());
                                 cellBlock.put("width", (int)tl.getBbox().getWidth());
@@ -145,36 +164,36 @@ public class JsonDocumentWriter {
                                 int len = tl.getText().length();
                                 cellBlock.put("end", start + len);
                                 start = start + len + 1;
-                                cellBlocks.put(cellBlock);
+                                cellBlocks.add(cellBlock);
 
                             }
                         }
                     }
 
                     cellText.put("cell_blocks", cellBlocks);
-                    jsonRow.put(cellText);
-                    JSONObject jsonProp = new JSONObject();
+                    jsonRow.add(cellText);
+                    ObjectNode jsonProp = this.jakson.createObjectNode();
                     int rowSpan = cell.getRb() - cell.getRt() + 1;
                     jsonProp.put("row_span", rowSpan);
                     int colSpan = cell.getCr() - cell.getCl() + 1;
                     jsonProp.put("col_span", colSpan);
                     jsonProp.put("invisible", cell.getInvisiable());
-                    jsonPropertiesRow.put(jsonProp);
+                    jsonPropertiesRow.add(jsonProp);
                 }
                 if (!row.getCells().isEmpty()) {
-                    jsonRows.put(jsonRow);
-                    cellProperties.put(jsonPropertiesRow);
+                    jsonRows.add(jsonRow);
+                    cellProperties.add(jsonPropertiesRow);
                 }
             }
             jsonTable.put("rows", jsonRows);
             jsonTable.put("cell_properties", cellProperties);
-            jsonTables.put(jsonTable);
+            jsonTables.add(jsonTable);
 
         }
 
         jsonPage.put("tables",jsonTables);
         for (PDFImage image: page.getImages()) {
-            JSONObject jsonImage = new JSONObject();
+            ObjectNode jsonImage =  this.jakson.createObjectNode();
             jsonImage.put("original_name", image.getFileName());
             jsonImage.put("tmp_file_path", image.getPathOut());
             jsonImage.put("uuid", image.getUuid());
@@ -183,10 +202,12 @@ public class JsonDocumentWriter {
             jsonImage.put("width", image.getWidth());
             jsonImage.put("height", image.getHeight());
             jsonImage.put("page_num", image.getPageNumber());
-            jsonImages.put(jsonImage);
+            jsonImages.add(jsonImage);
         }
         jsonPage.put("images",jsonImages);
 
         return jsonPage;
     }
+
+
 }

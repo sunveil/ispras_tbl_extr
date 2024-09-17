@@ -4,6 +4,10 @@ import java.nio.file.*;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import debug.DebugDrawer;
 import exceptions.EmptyArgumentException;
 import extractors.BlockComposer;
@@ -19,6 +23,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import utils.Config;
 import writers.HtmlTableWriter;
+import writers.JaksonWriter;
 import writers.JsonDocumentWriter;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -53,6 +58,11 @@ public class DedocTableExtractor {
 
     @Option(name = "-rf", aliases = {"--remove"}, usage = "remove frame")
     private boolean removeFrame = false;
+
+    @Option(name = "-tmp", aliases = {"--temporary"}, usage = "temporary directory")
+    private String tmpDir = "";
+
+
     @Option(name = "-?", aliases = {"--help"}, usage = "show this message")
     private boolean help = false;
 
@@ -76,6 +86,7 @@ public class DedocTableExtractor {
             if (removeFrame) {
                 Config.removeFrame = true;
             }
+
             inputFile = new File(inArg);
             inputPath = inputFile.isFile() ? inputFile.getParentFile().toPath() : inputFile.toPath();
 
@@ -87,6 +98,17 @@ public class DedocTableExtractor {
 
             outputFile.mkdirs();
             outputPath = outputFile.toPath();
+
+            if (isEmptyArg(tmpDir)) {
+                Config.tmpDir = outputFile.getParent();
+            } else {
+                Config.tmpDir = tmpDir;
+            }
+            File tmpDir = new File(Config.tmpDir);
+            if (tmpDir.exists() && tmpDir.isDirectory()) {
+            } else {
+                tmpDir.mkdir();
+            }
 
             if (inputFile.isFile()) {
 
@@ -189,13 +211,15 @@ public class DedocTableExtractor {
     }
 
     private void printJSON(Document document) throws IOException {
-        JsonDocumentWriter writer = new JsonDocumentWriter(document);
-        System.out.println(writer.write());
+        //JsonDocumentWriter writer = new JsonDocumentWriter(document);
+        JaksonWriter jaksonWriter = new JaksonWriter(document);
+        jaksonWriter.write();
     }
 
     private void printJSON(Document document, int startPage, int endPage) throws IOException {
-        JsonDocumentWriter writer = new JsonDocumentWriter(document, startPage, endPage);
-        System.out.println(writer.write());
+        //JsonDocumentWriter writer = new JsonDocumentWriter(document, startPage, endPage);
+        JaksonWriter jaksonWriter = new JaksonWriter(document, startPage, endPage);
+        jaksonWriter.write();
     }
 
     private void printTables(Document document) throws IOException {
