@@ -16,7 +16,7 @@ public class TextParserTest {
     @Test
     public void testMainMethodWithInput() throws IOException {
         String[] args = {
-                "-i", "./data/prospectus_part.pdf",
+                "-i", "./data/Document635.pdf",
                 "-o", "./data/out",
                 "-tmp", "./data/out"
         };
@@ -24,7 +24,7 @@ public class TextParserTest {
         dedocTableExtractor.main(args);
         ObjectMapper mapper = new ObjectMapper();
         JsonNode node = mapper.readTree(new File("./data/outdata.json"));
-        Assertions.assertEquals(node.get("document").asText(), "prospectus_part.pdf");
+        Assertions.assertEquals(node.get("document").asText(), "Document635.pdf");
     }
 
 

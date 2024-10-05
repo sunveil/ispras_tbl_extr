@@ -136,9 +136,7 @@ public class PDContentExtractor extends PDFTextStripper {
             final int pageIndex = page.getIndex();
             try {
                 stripPage(pageIndex);
-                boxFinder = new PdfBoxFinder(page.getPDPage());
-                boxFinder.processPage(page.getPDPage());
-                frames.addAll(boxFinder.getBoxes().values());
+
                 page.addChunks(chunks);
                 //page.addChars(chars);
                 page.addWords(words);
@@ -173,22 +171,12 @@ public class PDContentExtractor extends PDFTextStripper {
 
     private void stripPage(int pageIndex) throws IOException {
         PDPage page = document.getPage(pageIndex);
-
         RulingExtractor rulingExtractor = new RulingExtractor(page);
         List<Ruling> r = rulingExtractor.getRulings();
         if (r != null) {
             rulings.addAll(r);
         }
 
-        if (Config.removeFrame) {
-            PDRectangle rec = new PDRectangle();
-            rec.setLowerLeftX(page.getBBox().getLowerLeftX() + 60);
-            rec.setLowerLeftY(page.getBBox().getLowerLeftY() + 60);
-            rec.setUpperRightX(page.getBBox().getUpperRightX() - 60);
-            rec.setUpperRightY(page.getBBox().getUpperRightY() - 60);
-            page.setMediaBox(rec);
-            page.setCropBox(rec);
-        }
         order = -1; // Each page has own order that starts with 0
         pageIndex += 1; // PDFBox page numbers are 1-based
         setStartPage(pageIndex);
