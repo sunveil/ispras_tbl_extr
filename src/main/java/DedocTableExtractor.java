@@ -42,41 +42,29 @@ public class DedocTableExtractor {
     private File inputFile;
     private Path inputPath;
 
-    @Option(name = "-o", aliases = {"--output"}, metaVar = "PATH", usage = "specify a directory for extracted data")
+    @Option(name = "-o", aliases = {"--output"}, metaVar = "PATH", usage = "Specify a directory for extracted data")
     private String outArg;
     private File outputFile;
     private Path outputPath;
 
-    @Option(name = "-sp", aliases = {"--start"}, usage = "specify a start page")
+    @Option(name = "-sp", aliases = {"--start"}, usage = "Specify a start page")
     private String sPage;
     private int startPage;
 
-    @Option(name = "-ep", aliases = {"--end"}, usage = "specify a end page")
+    @Option(name = "-ep", aliases = {"--end"}, usage = "Specify a end page")
     private String ePage;
     private int endPage;
 
-    @Option(name = "-d", aliases = {"--debug"}, usage = "allow debug output")
+    @Option(name = "-d", aliases = {"--debug"}, usage = "Allow debug output")
     private boolean debug = false;
 
     @Option(name = "-rf", aliases = {"--remove frame"}, usage = "Remove GOST frame")
     private String rf = "";
 
-    @Option(name = "-l", aliases = {"--left"}, usage = "Left coordinate to remove frame")
-    private int left = 0;
-
-    @Option(name = "-t", aliases = {"--top"}, usage = "Top coordinate to remove frame")
-    private int top = 0;
-
-    @Option(name = "-w", aliases = {"--width"}, usage = "Width to remove frame")
-    private int width = 0;
-
-    @Option(name = "-h", aliases = {"--height"}, usage = "Height to remove frame")
-    private int height = 0;
-
     @Option(name = "-tmp", aliases = {"--temporary"}, usage = "temporary directory")
     private String tmpDir = "";
 
-    @Option(name = "-?", aliases = {"--help"}, usage = "show this message")
+    @Option(name = "-?", aliases = {"--help"}, usage = "Show this message")
     private boolean help = false;
 
     public static void main(String[] args) {
@@ -88,6 +76,7 @@ public class DedocTableExtractor {
     public void run(String[] args) {
 
         Config config = new Config();
+        Map<Integer, Rectangle2D.Float> GOSTFrames = new HashMap<>();
 
         CmdLineParser parser = new CmdLineParser(this);
         try {
@@ -131,43 +120,47 @@ public class DedocTableExtractor {
 
             if (inputFile.isFile()) {
                 if (Config.removeFrame) {
-                    Map<Integer, Rectangle2D.Float> GOSTFrames = readGOSTJson(Config.pathToGOSTJson);
+                    GOSTFrames = readGOSTJson(Config.pathToGOSTJson);
+                    Map<Integer, Rectangle2D> bboxes = new HashMap<>();
                     PDDocument doc = Loader.loadPDF(inputFile);
                     for (int i=0; i < doc.getPages().getCount(); i++){
                         PDPage page = doc.getPage(i);
                         Rectangle2D.Float rec = GOSTFrames.get(i);
                         if (rec == null) continue;
-                        float w = (float) (rec.getWidth() * page.getCropBox().getWidth());
+                        float w = (float) (rec.getWidth() * page.getCropBox().getWidth() );
                         float h = (float) (rec.getHeight() * page.getCropBox().getHeight());
                         float x = (float) (rec.getX() * page.getCropBox().getWidth());
-                        float y = (float) (page.getCropBox().getHeight() - ((rec.getY() * page.getCropBox().getHeight()) + h));
-                        PDRectangle newRec = new PDRectangle(x,y,w,h);
-                        if (newRec != null) {
-                            //page.setTrimBox(newRec);
+                        //float y = (float) (page.getCropBox().getHeight() - ((rec.getY() * page.getCropBox().getHeight()) + h));
+                        float y = (float) (rec.getY() * page.getCropBox().getHeight());
+                        Rectangle2D.Float newRec = new Rectangle2D.Float(x,y,w,h);
+                        bboxes.put(i, newRec);
+/*                        if (newRec != null) {
+                            page.setTrimBox(newRec);
                             page.setCropBox(newRec);
-                            //page.setMediaBox(newRec);
-                            //page.setBleedBox(newRec);
-                            //page.setArtBox(newRec);
-                        }
+                            page.setMediaBox(newRec);
+                            page.setBleedBox(newRec);
+                            page.setArtBox(newRec);
+                        }*/
                     }
-                    File cropped = new File(Config.tmpDir+"/cropped_"+inputFile.getName());
+                    Config.bboxes = bboxes;
+/*                    File cropped = new File(Config.tmpDir+"/cropped_"+inputFile.getName());
                     doc.save(cropped);
                     doc.close();
-                    inputFile = cropped;
+                    inputFile = cropped;*/
                 }
                 if (sPage != null && !sPage.isEmpty() && ePage != null && !ePage.isEmpty()) {
                     startPage = Integer.parseInt(sPage);
                     endPage = Integer.parseInt(ePage);
-                    extract(inputFile.toPath(), startPage - 1, endPage - 1);
+                    extract(inputFile.toPath(), startPage - 1, endPage - 1, GOSTFrames);
                 } else {
-                    extract(inputFile.toPath());
+                    extract(inputFile.toPath(), GOSTFrames);
                 }
             } else {
                 final PathMatcher matcher = FileSystems.getDefault().getPathMatcher("glob:**.{pdf,PDF}");
                 try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(inputPath, "*.pdf")) {
                     for (Path file : directoryStream) {
                         if (matcher.matches(file.getFileName())) {
-                            extract(file);
+                            extract(file, GOSTFrames);
                         }
                     }
                 }
@@ -209,10 +202,11 @@ public class DedocTableExtractor {
         return GOSTFrames;
     }
 
-    public void extract(Path path, int startPage, int endPage) throws IOException, ParserConfigurationException, TransformerException {
+    public void extract(Path path, int startPage, int endPage, Map<Integer, Rectangle2D.Float> GOSTFrames) throws IOException, ParserConfigurationException, TransformerException {
 
         Document document = null;
         document = Document.load(path, startPage, endPage);
+        document.setBBoxes(GOSTFrames);
 
         int lastPageIndex = document.getPageCnt();
         if (startPage > lastPageIndex)
@@ -233,7 +227,7 @@ public class DedocTableExtractor {
         }
     }
 
-    public void extract(Path path) throws IOException, ParserConfigurationException, TransformerException {
+    public void extract(Path path, Map<Integer, Rectangle2D.Float> GOSTFrames) throws IOException, ParserConfigurationException, TransformerException {
         Document document = null;
         PDDocument pdDocument = Loader.loadPDF(path.toFile());
 

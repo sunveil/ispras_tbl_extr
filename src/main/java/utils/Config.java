@@ -1,4 +1,7 @@
 package utils;
+import java.awt.geom.Rectangle2D;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Config {
 
@@ -9,12 +12,9 @@ public class Config {
     public static int top = 0;
     public static int width = 0;
     public static int height = 0;
+    public static Map<Integer, Rectangle2D> bboxes = new HashMap<>();
 
     public Config(){
-    }
-
-    public void setRemoveFrame(boolean removeFrame) {
-        this.removeFrame = removeFrame;
     }
 
     public void setLeft(int left){

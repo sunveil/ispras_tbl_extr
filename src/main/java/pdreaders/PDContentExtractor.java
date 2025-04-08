@@ -48,8 +48,6 @@ public class PDContentExtractor extends PDFTextStripper {
 
     private Page currentPage;
 
-    PdfBoxFinder boxFinder = null;
-
     // Settings
     {
         addOperator(new SetStrokingColorSpace());
@@ -68,9 +66,6 @@ public class PDContentExtractor extends PDFTextStripper {
 
     public PDContentExtractor(PDDocument document) throws IOException {
         this.document = document;
-        //this.setShouldSeparateByBeads(false);
-        //this.setSortByPosition(true);
-        //this.setSuppressDuplicateOverlappingText(true);
         chunks = new ArrayList<>(500);
         chars = new ArrayList<>(5000);
         words = new ArrayList<>(1000);
@@ -136,7 +131,6 @@ public class PDContentExtractor extends PDFTextStripper {
             final int pageIndex = page.getIndex();
             try {
                 stripPage(pageIndex);
-
                 page.addChunks(chunks);
                 //page.addChars(chars);
                 page.addWords(words);

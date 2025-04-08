@@ -72,7 +72,7 @@ public class ImageExtractor extends PDFStreamEngine {
             PDXObject xobject = getResources().getXObject( objectName );
             if( xobject instanceof PDImageXObject) {
                 PDImageXObject image = (PDImageXObject)xobject;
-                int imageWidth = image.getWidth();
+            int imageWidth = image.getWidth();
                 int imageHeight = image.getHeight();
                 Matrix ctmNew = getGraphicsState().getCurrentTransformationMatrix();
                 Rectangle2D.Float bbox = new Rectangle2D.Float(ctmNew.getTranslateX(), ctmNew.getTranslateY(),

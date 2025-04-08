@@ -54,6 +54,7 @@ public class Document implements Closeable {
     private int index = 0;
     private int pageCnt = 0;
     Map<PDPage, Page> taggedPages = new HashMap<>();
+    Map<Integer, Rectangle2D.Float> GOSTFrames = new HashMap<>();
 
 
     @Override
@@ -87,6 +88,10 @@ public class Document implements Closeable {
             } else
                 return null;
         }
+    }
+
+    public void setBBoxes(Map<Integer, Rectangle2D.Float> GOSTFrames){
+        this.GOSTFrames.putAll(GOSTFrames);
     }
 
     private Document(File file, PDDocument pdDocument, int startPage, int endPage, int pageCnt) throws IllegalArgumentException, IOException {

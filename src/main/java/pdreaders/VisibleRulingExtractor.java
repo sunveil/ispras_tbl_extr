@@ -20,8 +20,10 @@ import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDAbstractPattern;
 import org.apache.pdfbox.pdmodel.graphics.pattern.PDTilingPattern;
 import org.apache.pdfbox.rendering.ImageType;
+import utils.Config;
 import utils.Utils;
 import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.io.IOException;
@@ -108,7 +110,18 @@ public class VisibleRulingExtractor {
                 }
                 visibleRulings.addAll(verticalRulings);
             }
-            page.addVisibleRulings(visibleRulings);
+            Rectangle2D rec = Config.bboxes.get(page.getIndex());
+            if (rec != null) {
+                for (Ruling r: visibleRulings){
+                    if (rec.contains(r.getBounds())) {
+                        page.addVisibleRuling(r);
+                    }
+                }
+            } else {
+                page.addVisibleRulings(visibleRulings);
+
+            }
+
         }
     }
 

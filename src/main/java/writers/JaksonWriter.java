@@ -177,6 +177,10 @@ public class JaksonWriter {
                     jsonProp.put("row_span", rowSpan);
                     int colSpan = cell.getCr() - cell.getCl() + 1;
                     jsonProp.put("col_span", colSpan);
+                    jsonProp.put("x_top_left", cell.getLeft());
+                    jsonProp.put("y_top_left", cell.getTop());
+                    jsonProp.put("width", cell.getWidth());
+                    jsonProp.put("height", cell.getHeight());
                     jsonProp.put("invisible", cell.getInvisiable());
                     jsonPropertiesRow.add(jsonProp);
                 }

@@ -3,8 +3,7 @@ package model;
 import model.table.Cell;
 import model.table.Table;
 import org.apache.pdfbox.pdmodel.PDPage;
-
-import java.awt.*;
+import utils.Config;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.*;
@@ -20,7 +19,6 @@ public class Page extends PDFRectangle {
 
     // Text content
     private final java.util.List<TextChunk> chunks; // Original text chunks extracted from a PDF document
-    //private final java.util.List<TextChunk> chars;  // Characters extracted from original PDF chunks
     private final java.util.List<TextChunk> words;  // Words composed from characters
     private final java.util.List<TextChunk> lines;  // Text lines composed from characters
     private final java.util.List<TextChunk> blocks; // Text blocks composed from words
@@ -183,6 +181,10 @@ public class Page extends PDFRectangle {
         return result;
     }
 
+    public void addVisibleRuling(Ruling r){
+        this.visibleRulings.add(r);
+    }
+
     public boolean canPrint(Point2D.Float point) {
         double lt = getLeft()   + MIN_MARGIN;
         double tp = getTop()    + MIN_MARGIN;
@@ -278,8 +280,6 @@ public class Page extends PDFRectangle {
         return cells;
     }
 
-
-
     public void addPossibleTableArea (PDFRectangle tableArea) {
         possibleTables.add(tableArea);
     }
@@ -315,8 +315,11 @@ public class Page extends PDFRectangle {
     public List<TextChunk> getTextLines(){
         return lines;
     }
+
     public List<TextChunk> getOutsideTextLines(){
         List<TextChunk> result = new ArrayList<>();
+        Rectangle2D rec = null;
+        rec = Config.bboxes.get(this.getIndex());
         if (tables.isEmpty()) return lines;
         for (TextChunk block: lines) {
             boolean canAdd = true;
@@ -326,7 +329,13 @@ public class Page extends PDFRectangle {
                 }
             }
             if (canAdd) {
-                result.add(block);
+                if (rec != null) {
+                    if (rec.contains(block)) {
+                        result.add(block);
+                    }
+                } else {
+                    result.add(block);
+                }
             }
         }
         return result;
