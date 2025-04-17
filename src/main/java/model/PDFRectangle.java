@@ -1,5 +1,7 @@
 package model;
 
+import org.apache.pdfbox.text.TextPosition;
+
 import java.awt.*;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -22,6 +24,10 @@ public class PDFRectangle extends Rectangle2D.Double {
         setTop((float) topLeft.getY());
         setRight((float) bottomRight.getX());
         setBottom((float) bottomRight.getY());
+    }
+
+    public PDFRectangle(TextPosition tp) {
+        super(tp.getXDirAdj(), tp.getYDirAdj() - tp.getHeightDir(), tp.getWidthDirAdj() , tp.getHeightDir());
     }
 
     public double getLeft() {
@@ -62,6 +68,10 @@ public class PDFRectangle extends Rectangle2D.Double {
 
     public void setTop(double top) {
         super.y = top;
+    }
+
+    public void setPDFRectangle(PDFRectangle pdfRectangle){
+        super.setRect(pdfRectangle.x, pdfRectangle.y, pdfRectangle.getWidth(), pdfRectangle.getHeight());
     }
 
     public Point2D[] getPoints() {
