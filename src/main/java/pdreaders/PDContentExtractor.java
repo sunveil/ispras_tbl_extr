@@ -50,18 +50,18 @@ public class PDContentExtractor extends PDFTextStripper {
 
     // Settings
     {
-        addOperator(new SetStrokingColorSpace());
-        addOperator(new SetStrokingDeviceCMYKColor());
-        addOperator(new SetStrokingDeviceRGBColor());
-        addOperator(new SetStrokingDeviceGrayColor());
-        addOperator(new SetStrokingColor());
-        addOperator(new SetStrokingColorN());
-        addOperator(new SetNonStrokingColorSpace());
-        addOperator(new SetNonStrokingDeviceCMYKColor());
-        addOperator(new SetNonStrokingDeviceRGBColor());
-        addOperator(new SetNonStrokingDeviceGrayColor());
-        addOperator(new SetNonStrokingColor());
-        addOperator(new SetNonStrokingColorN());
+        addOperator(new SetStrokingColorSpace(this));
+        addOperator(new SetStrokingDeviceCMYKColor(this));
+        addOperator(new SetStrokingDeviceRGBColor(this));
+        addOperator(new SetStrokingDeviceGrayColor(this));
+        addOperator(new SetStrokingColor(this));
+        addOperator(new SetStrokingColorN(this));
+        addOperator(new SetNonStrokingColorSpace(this));
+        addOperator(new SetNonStrokingDeviceCMYKColor(this));
+        addOperator(new SetNonStrokingDeviceRGBColor(this));
+        addOperator(new SetNonStrokingDeviceGrayColor(this));
+        addOperator(new SetNonStrokingColor(this));
+        addOperator(new SetNonStrokingColorN(this));
     }
 
     public PDContentExtractor(PDDocument document) throws IOException {

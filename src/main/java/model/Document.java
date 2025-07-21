@@ -55,6 +55,7 @@ public class Document implements Closeable {
     private int pageCnt = 0;
     Map<PDPage, Page> taggedPages = new HashMap<>();
     Map<Integer, Rectangle2D.Float> GOSTFrames = new HashMap<>();
+    private Object COSBase;
 
 
     @Override
@@ -114,6 +115,20 @@ public class Document implements Closeable {
     }
     private void createPages(int startPage, int endPage) throws IOException {
         for (int i = startPage; i <= endPage; i++) {
+            PDResources resources = this.getPDPage(i).getResources();
+           /* for (COSName fontName : resources.getFontNames())
+            {
+                PDFont font = resources.getFont(fontName);
+                if (font instanceof PDType0Font) {
+                    PDType0Font type0Font = (PDType0Font) font;
+                    COSDictionary fontDictionary = type0Font.getCOSObject();
+                    COSDictionary cmapDictionary = new COSDictionary();
+                    cmapDictionary.setItem(COSName.NAME, "Identity-H"); // Example CMap name
+
+                }
+                System.out.println(i);
+                System.out.println(font.getName());
+            }*/
             Page page = createPage(i);
             pages.add(page);
             taggedPages.put(pdDocument.getPage(i), page);

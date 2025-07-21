@@ -4,10 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import debug.DebugDrawer;
 import exceptions.EmptyArgumentException;
 import extractors.BlockComposer;
@@ -19,14 +17,12 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import utils.Config;
 import writers.HtmlTableWriter;
 import writers.JaksonWriter;
-import writers.JsonDocumentWriter;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
@@ -243,7 +239,7 @@ public class DedocTableExtractor {
 
         if (debug) {
             drawDebug(document);
-            writeTables(document);
+            //writeTables(document);
         }
     }
 

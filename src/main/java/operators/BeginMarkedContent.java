@@ -1,5 +1,6 @@
 package operators;
 
+import org.apache.pdfbox.contentstream.PDFStreamEngine;
 import org.apache.pdfbox.contentstream.operator.MissingOperandException;
 import org.apache.pdfbox.contentstream.operator.Operator;
 import org.apache.pdfbox.contentstream.operator.OperatorProcessor;
@@ -7,6 +8,7 @@ import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.cos.COSObject;
+import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.documentinterchange.markedcontent.PDPropertyList;
 import org.apache.pdfbox.pdmodel.graphics.PDXObject;
 import org.apache.pdfbox.pdmodel.graphics.form.PDFormXObject;
@@ -19,7 +21,8 @@ import java.util.List;
 
 public class BeginMarkedContent extends OperatorProcessor {
 
-    public BeginMarkedContent() {
+    public BeginMarkedContent(PDFStreamEngine context) {
+        super(context);
     }
 
     @Override
@@ -49,7 +52,7 @@ public class BeginMarkedContent extends OperatorProcessor {
                 }
             }
 
-            this.context.beginMarkedContentSequence(tag, properties);
+            this.getContext().beginMarkedContentSequence(tag, properties);
         }
     }
 

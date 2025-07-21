@@ -202,8 +202,8 @@ public class JaksonWriter {
             jsonImage.put("tmp_file_path", image.getPathOut());
             jsonImage.put("uuid", image.getUuid());
             jsonImage.put("x_top_left", image.getXPosition());
-            jsonImage.put("y_top_left", image.getYPosition());
-            jsonImage.put("width", image.getWidth());
+            jsonImage.put("y_top_left", (int)page.getHeight() - image.getYPosition());
+            jsonImage.put("width",  image.getWidth());
             jsonImage.put("height", image.getHeight());
             jsonImage.put("page_num", image.getPageNumber());
             jsonImages.add(jsonImage);

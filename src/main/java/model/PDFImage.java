@@ -17,11 +17,11 @@ public class PDFImage {
     private String uuid;
     private String fileName;
     private String pathOut;
-    private Rectangle2D bbox;
+    private PDFRectangle bbox;
 
     private int pageNumber;
 
-    public PDFImage(PDImageXObject image, Rectangle2D bbox, Page page, String path){
+    public PDFImage(PDImageXObject image, PDFRectangle bbox, Page page, String path){
         this.image = image;
         this.page = page;
         UUID uuid = UUID.randomUUID();
@@ -64,11 +64,11 @@ public class PDFImage {
     }
 
     public int getXPosition(){
-        return (int) this.bbox.getX();
+        return (int) this.bbox.getLeft();
     }
 
     public int getYPosition(){
-        return (int) this.bbox.getY();
+        return (int) this.bbox.getTop();
     }
 
     public void save() throws IOException {

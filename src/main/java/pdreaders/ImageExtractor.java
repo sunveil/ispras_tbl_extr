@@ -1,6 +1,7 @@
 package pdreaders;
 
 import model.PDFImage;
+import model.PDFRectangle;
 import model.Page;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
@@ -34,12 +35,14 @@ public class ImageExtractor extends PDFStreamEngine {
     private File sourceFile;
 
     public ImageExtractor(PDDocument document, File sourceFile) throws IOException {
-        addOperator(new Concatenate());
-        addOperator(new DrawObject());
-        addOperator(new SetGraphicsStateParameters());
-        addOperator(new Save());
-        addOperator(new Restore());
-        addOperator(new SetMatrix());
+
+        addOperator(new Concatenate(this));
+        addOperator(new DrawObject(this));
+        addOperator(new SetGraphicsStateParameters(this));
+        addOperator(new Save(this));
+        addOperator(new Restore(this));
+        addOperator(new SetMatrix(this));
+
         this.document = document;
         this.images = new ArrayList<>(5);
         this.sourceFile = sourceFile;
@@ -72,11 +75,18 @@ public class ImageExtractor extends PDFStreamEngine {
             PDXObject xobject = getResources().getXObject( objectName );
             if( xobject instanceof PDImageXObject) {
                 PDImageXObject image = (PDImageXObject)xobject;
-            int imageWidth = image.getWidth();
+                int imageWidth = image.getWidth();
                 int imageHeight = image.getHeight();
+                float pWidth = (float) this.currentPage.getWidth();
+                float pHeight = (float) this.currentPage.getHeight();
                 Matrix ctmNew = getGraphicsState().getCurrentTransformationMatrix();
-                Rectangle2D.Float bbox = new Rectangle2D.Float(ctmNew.getTranslateX(), ctmNew.getTranslateY(),
-                        imageWidth, imageHeight);
+                float translateX = ctmNew.getTranslateX();
+                float translateY = ctmNew.getTranslateY();
+                float scalingFactorX = ctmNew.getScalingFactorX();
+                float scalingFactorY = ctmNew.getScalingFactorY();
+
+                PDFRectangle bbox = new PDFRectangle(translateX, pHeight-translateY,
+                        scalingFactorX+translateX, pHeight-translateY+scalingFactorY);
                 PDFImage pdfImage = new PDFImage(image, bbox, currentPage, Config.tmpDir);
                 this.images.add(pdfImage);
                 pdfImage.save();

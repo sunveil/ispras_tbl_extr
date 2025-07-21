@@ -70,7 +70,7 @@ public class DebugDrawer {
         drawBlocks();
         drawRulings();
         drawBorderedTables();
-        drawProjections();
+        drawImages();
         drawTextLines();
     }
 
@@ -219,7 +219,10 @@ public class DebugDrawer {
         //drawer.drawString("fs: " + font_size, block.getLeft(), block.getTop());
     }
 
-    private void drawProjections() throws IOException {
+    private void drawImage(PageDrawer drawer, PDFImage image) throws IOException {
+        drawer.drawRectangle(image.getXPosition(), image.getYPosition(), image.getXPosition()+image.getWidth(), image.getYPosition()+image.getHeight());
+    }
+    private void drawImages() throws IOException {
         PDDocument pdDocument = getPDDocument();
         PageDrawer.Builder builder = new PageDrawer.Builder(pdDocument, rulingDrawStyle);
 
@@ -227,12 +230,8 @@ public class DebugDrawer {
             Page page = pages.next();
             int pageIndex = page.getIndex();
             PageDrawer drawer = builder.createPageDrawer(pageIndex);
-            for (Table table: page.getTables()) {
-                for (Range h: table.getHorizontal()) {
-                    drawHorizontal(drawer, h, table);
-                }
-                //table.getHorizontal();
-                //table.getVertical();
+            for (PDFImage image: page.getImages()) {
+                drawImage(drawer, image);
             }
             drawer.close();
         }
@@ -470,7 +469,7 @@ public class DebugDrawer {
                     .setStrokingColor(Color.BLACK)
                     .setNonStrokingColor(Color.RED)
                     .setLineWidth(0.25f)
-                    .setFont(PDType1Font.HELVETICA_BOLD)
+                    .setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD))
                     .setFontSize(6f);
 
             chunkDrawStyle = builder.createDrawStyle();

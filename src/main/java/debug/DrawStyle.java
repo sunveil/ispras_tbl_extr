@@ -1,8 +1,8 @@
 package debug;
 
-import org.apache.pdfbox.pdmodel.font.PDFont;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-import java.awt.Color;
+import org.apache.pdfbox.pdmodel.font.*;
+
+import java.awt.*;
 
 public class DrawStyle {
     private Color strokingColor;
@@ -45,7 +45,7 @@ public class DrawStyle {
             setStrokingColor(Color.BLACK);
             setNonStrokingColor(Color.BLACK);
             setLineWidth(0.5f);
-            setFont(PDType1Font.HELVETICA);
+            setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD));
             setFontSize(6f);
         }
 

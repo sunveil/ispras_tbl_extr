@@ -23,13 +23,13 @@ public class PrintTags extends PDFStreamEngine {
 
     public PrintTags() throws IOException {
         super();
-        addOperator(new Concatenate());
-        addOperator(new DrawObject());
-        addOperator(new SetGraphicsStateParameters());
-        addOperator(new Save());
-        addOperator(new Restore());
-        addOperator(new SetMatrix());
-        addOperator(new BeginMarkedContent());
+        addOperator(new Concatenate(this));
+        addOperator(new DrawObject(this));
+        addOperator(new SetGraphicsStateParameters(this));
+        addOperator(new Save(this));
+        addOperator(new Restore(this));
+        addOperator(new SetMatrix(this));
+        addOperator(new BeginMarkedContent(this));
     }
 
     protected void processOperator(Operator operator, List<COSBase> operands) throws IOException {
