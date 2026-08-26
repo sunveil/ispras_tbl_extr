@@ -236,13 +236,14 @@ public class VisibleRulingExtractor {
 
         for (int x = 0; x < width; x++) {
 
-            int[] lastPixel = r.getPixel(x, 0, (int[]) null);
+            // getSample avoids the int[] that getPixel allocates for every pixel
+            int lastPixel = r.getSample(x, 0, 0);
 
             for (int y = 1; y < height - 1; y++) {
 
-                int[] currPixel = r.getPixel(x, y, (int[]) null);
+                int currPixel = r.getSample(x, y, 0);
 
-                int diff = Math.abs(currPixel[0] - lastPixel[0]);
+                int diff = Math.abs(currPixel - lastPixel);
                 if (diff > GRAYSCALE_INTENSITY_THRESHOLD) {
                     boolean alreadyChecked = false;
                     for (Ruling line : horizontalRulings) {
@@ -261,11 +262,11 @@ public class VisibleRulingExtractor {
                     int lineX = x + 1;
 
                     while (lineX < width) {
-                        int[] linePixel = r.getPixel(lineX, y, (int[]) null);
-                        int[] abovePixel = r.getPixel(lineX, y - 1, (int[]) null);
+                        int linePixel = r.getSample(lineX, y, 0);
+                        int abovePixel = r.getSample(lineX, y - 1, 0);
 
-                        if (Math.abs(linePixel[0] - abovePixel[0]) <= GRAYSCALE_INTENSITY_THRESHOLD
-                                || Math.abs(currPixel[0] - linePixel[0]) > GRAYSCALE_INTENSITY_THRESHOLD) {
+                        if (Math.abs(linePixel - abovePixel) <= GRAYSCALE_INTENSITY_THRESHOLD
+                                || Math.abs(currPixel - linePixel) > GRAYSCALE_INTENSITY_THRESHOLD) {
                             break;
                         }
                         lineX++;
@@ -294,13 +295,14 @@ public class VisibleRulingExtractor {
 
         for (int y = 0; y < height; y++) {
 
-            int[] lastPixel = r.getPixel(0, y, (int[]) null);
+            // getSample avoids the int[] that getPixel allocates for every pixel
+            int lastPixel = r.getSample(0, y, 0);
 
             for (int x = 1; x < width - 1; x++) {
 
-                int[] currPixel = r.getPixel(x, y, (int[]) null);
+                int currPixel = r.getSample(x, y, 0);
 
-                int diff = Math.abs(currPixel[0] - lastPixel[0]);
+                int diff = Math.abs(currPixel - lastPixel);
                 if (diff > GRAYSCALE_INTENSITY_THRESHOLD) {
                     boolean alreadyChecked = false;
                     for (Ruling line : verticalRulings) {
@@ -320,11 +322,11 @@ public class VisibleRulingExtractor {
                     int lineY = y + 1;
 
                     while (lineY < height) {
-                        int[] linePixel = r.getPixel(x, lineY, (int[]) null);
-                        int[] leftPixel = r.getPixel(x - 1, lineY, (int[]) null);
+                        int linePixel = r.getSample(x, lineY, 0);
+                        int leftPixel = r.getSample(x - 1, lineY, 0);
 
-                        if (Math.abs(linePixel[0] - leftPixel[0]) <= GRAYSCALE_INTENSITY_THRESHOLD
-                                || Math.abs(currPixel[0] - linePixel[0]) > GRAYSCALE_INTENSITY_THRESHOLD) {
+                        if (Math.abs(linePixel - leftPixel) <= GRAYSCALE_INTENSITY_THRESHOLD
+                                || Math.abs(currPixel - linePixel) > GRAYSCALE_INTENSITY_THRESHOLD) {
                             break;
                         }
 
