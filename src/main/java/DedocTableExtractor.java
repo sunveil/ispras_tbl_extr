@@ -60,6 +60,9 @@ public class DedocTableExtractor {
     @Option(name = "-tmp", aliases = {"--temporary"}, usage = "temporary directory")
     private String tmpDir = "";
 
+    @Option(name = "-c", aliases = {"--compact"}, usage = "Write data.json without pretty printing")
+    private boolean compact = false;
+
     @Option(name = "-?", aliases = {"--help"}, usage = "Show this message")
     private boolean help = false;
 
@@ -89,6 +92,8 @@ public class DedocTableExtractor {
                 Config.removeFrame = true;
                 Config.pathToGOSTJson = rf;
             }
+
+            Config.compactJson = compact;
 
             inputFile = new File(inArg);
             inputPath = inputFile.isFile() ? inputFile.getParentFile().toPath() : inputFile.toPath();

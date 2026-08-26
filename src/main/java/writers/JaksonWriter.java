@@ -37,7 +37,7 @@ public class JaksonWriter {
         this.jakson = new ObjectMapper();
         this.root = this.jakson.createObjectNode();
         this.root.put("document", this.document.getSourceFile().getName());
-        this.writer = this.jakson.writer(new DefaultPrettyPrinter());
+        this.writer = Config.compactJson ? this.jakson.writer() : this.jakson.writer(new DefaultPrettyPrinter());
     }
 
     public JaksonWriter(Document document, int startPage, int endPage){
@@ -48,7 +48,7 @@ public class JaksonWriter {
         this.jakson = new ObjectMapper();
         this.root = this.jakson.createObjectNode();
         this.root.put("document", this.document.getSourceFile().getName());
-        this.writer = this.jakson.writer(new DefaultPrettyPrinter());
+        this.writer = Config.compactJson ? this.jakson.writer() : this.jakson.writer(new DefaultPrettyPrinter());
     }
 
     public void write() throws IOException {

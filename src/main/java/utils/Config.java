@@ -6,6 +6,7 @@ import java.util.Map;
 public class Config {
 
     public static boolean removeFrame = false;
+    public static boolean compactJson = false;
     public static String tmpDir;
     public static String pathToGOSTJson;
     public static int left = 0;
