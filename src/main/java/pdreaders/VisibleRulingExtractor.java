@@ -50,12 +50,11 @@ public class VisibleRulingExtractor {
     }
 
     public void process(Page page) throws IOException {
+        detectRulings(page, renderPage(page.getPDPage()));
+    }
 
-        release();
-
-        BufferedImage image;
-        PDPage pdPage = page.getPDPage();
-
+    /** Strips the text and rasterizes the page. Rewrites the content stream, so it mutates the PDDocument. */
+    public BufferedImage renderPage(PDPage pdPage) throws IOException {
         List<Object> newTokens = createTokensWithoutText(pdPage);
         PDStream newContents = new PDStream(pdDocument);
         writeTokensToStream(newContents, newTokens);
@@ -65,7 +64,14 @@ public class VisibleRulingExtractor {
             processResources(resources);
             //removeAllImages(resources);
         }
-        image = Utils.convertPageToImage(pdPage, 144, ImageType.GRAY);
+        return Utils.convertPageToImage(pdPage, 144, ImageType.GRAY);
+    }
+
+    /** Scans the rendered page for rulings. Touches only the given image and page, not the PDDocument. */
+    public void detectRulings(Page page, BufferedImage image) throws IOException {
+
+        release();
+
         List<Ruling> horizontalRulings = getHorizontalRulings(image);
         List<Ruling> verticalRulings = getVerticalRulings(image);
 

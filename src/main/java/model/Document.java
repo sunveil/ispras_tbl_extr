@@ -33,6 +33,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.Closeable;
 import java.io.File;
@@ -42,6 +43,10 @@ import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.io.FileOutputStream;
 
 public class Document implements Closeable {
@@ -49,7 +54,6 @@ public class Document implements Closeable {
     private final PDDocument pdDocument;
     private final List<Page> pages = new ArrayList<>();
     private final PDContentExtractor contentExtractor;
-    private final VisibleRulingExtractor visibleRulingExtractor;
     private final ImageExtractor imageExtractor;
     private int index = 0;
     private int pageCnt = 0;
@@ -104,7 +108,6 @@ public class Document implements Closeable {
             this.sourceFile = file;
             this.pdDocument = pdDocument;
             contentExtractor = new PDContentExtractor(this.pdDocument);
-            visibleRulingExtractor = new VisibleRulingExtractor(this.pdDocument);
             imageExtractor = new ImageExtractor(this.pdDocument, this.sourceFile);
         }
         createPages(startPage, endPage);
@@ -169,8 +172,39 @@ public class Document implements Closeable {
     }
 
     public void extractLines() throws IOException {
+        // Rendering mutates the shared PDDocument, so it stays under renderLock; the rewrites are idempotent, so
+        // lock order does not change the result. The pixel scan that follows is per page and runs in parallel.
+        if (pages.isEmpty()) {
+            return;
+        }
+        final Object renderLock = new Object();
+        int threads = Math.min(pages.size(), Runtime.getRuntime().availableProcessors());
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        List<Future<?>> futures = new ArrayList<>(pages.size());
         for (Page page: pages) {
-            visibleRulingExtractor.process(page);
+            futures.add(pool.submit(() -> {
+                // the extractor keeps the rulings of one page, so it cannot be shared
+                VisibleRulingExtractor extractor = new VisibleRulingExtractor(pdDocument);
+                BufferedImage image;
+                synchronized (renderLock) {
+                    image = extractor.renderPage(page.getPDPage());
+                }
+                extractor.detectRulings(page, image);
+                return null;
+            }));
+        }
+        pool.shutdown();
+        try {
+            for (Future<?> future: futures) {
+                future.get();
+            }
+        } catch (ExecutionException e) {
+            pool.shutdownNow();
+            throw new IOException(e.getCause());
+        } catch (InterruptedException e) {
+            pool.shutdownNow();
+            Thread.currentThread().interrupt();
+            throw new IOException(e);
         }
     }
 
