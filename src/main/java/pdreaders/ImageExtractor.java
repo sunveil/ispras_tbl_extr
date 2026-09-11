@@ -85,8 +85,10 @@ public class ImageExtractor extends PDFStreamEngine {
                 float scalingFactorX = ctmNew.getScalingFactorX();
                 float scalingFactorY = ctmNew.getScalingFactorY();
 
-                PDFRectangle bbox = new PDFRectangle(translateX, pHeight-translateY,
-                        scalingFactorX+translateX, pHeight-translateY+scalingFactorY);
+                // the CTM translation is the lower left corner of the image in PDF coordinates (y grows upwards),
+                // while a PDFRectangle is (left, top, right, bottom) with y growing downwards from the page top
+                PDFRectangle bbox = new PDFRectangle(translateX, pHeight-translateY-scalingFactorY,
+                        scalingFactorX+translateX, pHeight-translateY);
                 PDFImage pdfImage = new PDFImage(image, bbox, currentPage, Config.tmpDir);
                 this.images.add(pdfImage);
                 pdfImage.save();
